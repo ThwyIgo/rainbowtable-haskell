@@ -9,6 +9,9 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import System.Random
 import Prelude hiding (lookup)
+import Data.Maybe
+import Debug.Trace (trace)
+import Data.List (sort, group)
 
 data RainbowTable = RainbowTable
   { table :: HashMap B.ByteString String,
@@ -48,7 +51,7 @@ genChainImpl hash reduce chainSize initialPw =
             reduced = reduce i hashed
         put reduced
         return (hashed, currPw)
-   in flip evalState initialPw $ sequence [hashReduce $ fromIntegral i | i <- [0 .. chainSize]]
+   in flip evalState initialPw $ sequence [hashReduce $ fromIntegral i | i <- [1 .. chainSize]]
 
 -- Gera uma rainbowtable (HashMap)
 genTableImpl ::
@@ -98,7 +101,22 @@ genTable genRandStr hash reduce charset pwSize chainSize chainCount randSeed =
 lookup :: RainbowTable -> B.ByteString -> Maybe String
 lookup rt hashed = case HashMap.lookup hashed rt.table of
   Just initialPw -> Just $ snd . last $ rt.genChain initialPw
-  a ->
-    let l = replicate rt.chainLength reduceHash
-        reduceHash = undefined
-     in undefined
+  Nothing ->
+    let len = fromIntegral rt.chainLength :: Integer
+        reduceHash i h = rt.hash $ rt.reduce i h
+        reducedHashed i = composeNtimes reduceHash len i
+        lastHashes = map (`reducedHashed` hashed) [len,len-1..1]
+        initialPws = mapMaybe (\h -> HashMap.lookup h rt.table) lastHashes
+     in trace (show initialPws) $ msum $ map (go hashed . rt.genChain) initialPws
+    where
+      go _ [] = Nothing
+      go target ((hashed, pw) : t) =
+        if hashed == target
+          then Just pw
+          else go target t
+        
+      composeNtimes :: (Integer -> B.ByteString -> B.ByteString) -> Integer -> Integer -> B.ByteString -> B.ByteString
+      composeNtimes f len i 
+        | len > i = composeNtimes f (len-1) i . f len
+        | len == i = f len
+        | otherwise = error "len < i"
