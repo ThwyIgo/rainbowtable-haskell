@@ -3,6 +3,9 @@ module Main (main) where
 import qualified RainbowTable
 import System.IO (hFlush, stdout)
 import System.Random (mkStdGen)
+import HashReduce (hash, reduce, bs2s)
+import Data.HashMap.Strict (toList)
+import RainbowTable (RainbowTable(table))
 
 pwSize :: (Integral a) => a
 pwSize = 5
@@ -20,16 +23,17 @@ charset =
         then error "charset precisa ter exatamente 70 elementos"
         else cs
 
+genRandStr = RainbowTable.genRandStrImpl
+
 main :: IO ()
 main = do
   putStrLn "Gerando Rainbowtable..."
-  let genChain randSeed = RainbowTable.genChain charset randSeed pwSize chainSize
-      genChains randSeed = RainbowTable.genChains genChain randSeed chainCount
-      !(!rt, _) = RainbowTable.genTable genChains (mkStdGen 0)
+  let !(rt, _) = RainbowTable.genTable genRandStr hash reduce charset pwSize chainSize chainCount (mkStdGen 0)
 
   putStrLn "Rainbowtable gerada!"
-  putStr $ "Digite um SHA512 referente a uma senha de " ++ show pwSize ++ " caracteres: "
-  hFlush stdout
-  hashedPw <- getLine
 
-  putStrLn $ "SHA512 da senha: " ++ undefined
+  let test = fst $ head $ toList (table rt)
+  putStrLn $ "Hash a ser buscado: " ++ bs2s test
+  let Just senha = RainbowTable.lookup rt test
+  putStrLn $ "Senha encontrada: " ++ senha
+  putStrLn $ "Hash da senha: " ++ bs2s (hash senha)
