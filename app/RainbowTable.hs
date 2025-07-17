@@ -9,9 +9,7 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import System.Random
 import Prelude hiding (lookup)
-import Data.Maybe
 import Debug.Trace (trace)
-import Data.List (sort, group)
 
 data RainbowTable = RainbowTable
   { table :: HashMap B.ByteString String,
@@ -99,24 +97,30 @@ genTable genRandStr hash reduce charset pwSize chainSize chainCount randSeed =
       )
 
 lookup :: RainbowTable -> B.ByteString -> Maybe String
-lookup rt hashed = case HashMap.lookup hashed rt.table of
-  Just initialPw -> Just $ snd . last $ rt.genChain initialPw
-  Nothing ->
-    let len = fromIntegral rt.chainLength :: Integer
-        reduceHash i h = rt.hash $ rt.reduce i h
-        reducedHashed i = composeNtimes reduceHash len i
-        lastHashes = map (`reducedHashed` hashed) [len,len-1..1]
-        initialPws = mapMaybe (\h -> HashMap.lookup h rt.table) lastHashes
-     in trace (show initialPws) $ msum $ map (go hashed . rt.genChain) initialPws
-    where
-      go _ [] = Nothing
-      go target ((hashed, pw) : t) =
-        if hashed == target
-          then Just pw
-          else go target t
-        
-      composeNtimes :: (Integer -> B.ByteString -> B.ByteString) -> Integer -> Integer -> B.ByteString -> B.ByteString
-      composeNtimes f len i 
-        | len > i = composeNtimes f (len-1) i . f len
-        | len == i = f len
-        | otherwise = error "len < i"
+lookup rt hashed =
+  let initialPw = lookupInit rt hashed
+   in case initialPw of
+        Just pw -> findHash hashed $ rt.genChain pw
+        n -> n
+  where
+    findHash _ [] = Nothing
+    findHash target ((h, pw) : t)
+      | target == h = Just pw
+      | otherwise = findHash target t
+
+lookupInit :: RainbowTable -> B.ByteString -> Maybe String
+lookupInit rt hashed =
+  let mFound = HashMap.lookup hashed rt.table
+      l = [tryFindInit rt hashed i rt.chainLength | i <- [rt.chainLength,rt.chainLength-1 .. 1]]
+   in case mFound of
+        Nothing -> trace ("tried: " ++ show l) $ msum l
+        j -> j
+
+tryFindInit :: RainbowTable -> B.ByteString -> Int -> Int -> Maybe String
+tryFindInit rt hashed i max =
+  let i1 = fromIntegral i :: Integer
+      max1 = fromIntegral max :: Integer
+      steps = map rt.reduce [i1 .. max1-1]
+      lastHash = foldl (\bs r -> rt.hash $ r bs) hashed steps
+      mFound = HashMap.lookup lastHash rt.table
+   in mFound

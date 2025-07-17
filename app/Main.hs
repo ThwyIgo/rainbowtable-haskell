@@ -1,21 +1,21 @@
 module Main (main) where
 
-import qualified RainbowTable
+import Control.Monad (forever)
+import Data.HashMap.Strict qualified as HashMap
+import HashReduce (bs2s, hash, reduce, s2bs)
+import RainbowTable (RainbowTable (table))
+import RainbowTable qualified
 import System.IO (hFlush, stdout)
 import System.Random (mkStdGen)
-import HashReduce (hash, reduce, bs2s, s2bs)
-import RainbowTable (RainbowTable(table))
-import Data.HashMap.Strict qualified as HashMap
-import Control.Monad (forever)
 
-pwLength :: (Integral a) => a
-pwLength = 5
+pwLength :: Int
+pwLength = 3
 
-chainLength :: (Integral a) => a
-chainLength = 2
+chainLength :: Int
+chainLength = 100
 
-chainCount :: (Integral a) => a
-chainCount = 5000
+chainCount :: Int
+chainCount = pwLength ^ length charset `div` chainLength ^ 7
 
 charset :: [Char]
 charset =
@@ -34,6 +34,12 @@ main = do
   putStrLn "Rainbowtable gerada!"
   putStrLn $ "chainCout: " ++ show chainCount ++ ". Entradas na rainbowtable: " ++ show (length . HashMap.toList $ RainbowTable.table rt)
 
+  let test = fst $ head $ HashMap.toList (table rt)
+  putStrLn $ "Hash a ser buscado: " ++ bs2s test
+  let Just senha = RainbowTable.lookup rt test
+  putStrLn $ "Senha encontrada: " ++ senha
+  putStrLn $ "Hash da senha: " ++ bs2s (hash senha)
+
   forever $ do
     putStr "Digite um SHA512: "
     hFlush stdout
@@ -43,6 +49,7 @@ main = do
       Just pw -> do
         putStrLn $ "Senha encontrada: " ++ pw
         putStrLn $ "Hash da senha: " ++ bs2s (hash pw)
-      Nothing -> do putStrLn "Não encontrado"
-                    a <- getLine
-                    print $ RainbowTable.genChain rt a
+      Nothing -> do
+        putStrLn "Não encontrado"
+        a <- getLine
+        print $ map snd $ RainbowTable.genChain rt a
