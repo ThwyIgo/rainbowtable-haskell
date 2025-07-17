@@ -10,6 +10,7 @@ import Data.HashMap.Strict qualified as HashMap
 import System.Random
 import Prelude hiding (lookup)
 import Debug.Trace (trace)
+import Data.Maybe (isJust)
 
 data RainbowTable = RainbowTable
   { table :: HashMap B.ByteString String,
@@ -100,21 +101,21 @@ lookup :: RainbowTable -> B.ByteString -> Maybe String
 lookup rt hashed =
   let initialPw = lookupInit rt hashed
    in case initialPw of
-        Just pw -> findHash hashed $ rt.genChain pw
-        n -> n
+        Just pw -> msum (findHash hashed . rt.genChain <$> pw)
+        Nothing -> Nothing
   where
     findHash _ [] = Nothing
     findHash target ((h, pw) : t)
       | target == h = Just pw
       | otherwise = findHash target t
 
-lookupInit :: RainbowTable -> B.ByteString -> Maybe String
+lookupInit :: RainbowTable -> B.ByteString -> Maybe [String]
 lookupInit rt hashed =
   let mFound = HashMap.lookup hashed rt.table
       l = [tryFindInit rt hashed i rt.chainLength | i <- [rt.chainLength,rt.chainLength-1 .. 1]]
    in case mFound of
-        Nothing -> trace ("tried: " ++ show l) $ msum l
-        j -> j
+        Nothing -> trace ("tried: " ++ show l) $ sequence $ filter isJust l
+        Just init -> Just [init]
 
 tryFindInit :: RainbowTable -> B.ByteString -> Int -> Int -> Maybe String
 tryFindInit rt hashed i max =
