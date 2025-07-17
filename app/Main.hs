@@ -9,13 +9,13 @@ import System.IO (hFlush, stdout)
 import System.Random (mkStdGen)
 
 pwLength :: Int
-pwLength = 3
+pwLength = 5
 
 chainLength :: Int
 chainLength = 100
 
 chainCount :: Int
-chainCount = pwLength ^ length charset `div` chainLength ^ 7
+chainCount = pwLength ^ length charset `div` chainLength ^ 6
 
 charset :: [Char]
 charset =

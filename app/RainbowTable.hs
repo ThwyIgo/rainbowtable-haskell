@@ -11,6 +11,7 @@ import System.Random
 import Prelude hiding (lookup)
 import Debug.Trace (trace)
 import Data.Maybe (isJust)
+import Control.Parallel.Strategies (parListChunk, rdeepseq, using)
 
 data RainbowTable = RainbowTable
   { table :: HashMap B.ByteString String,
@@ -85,7 +86,7 @@ genTable ::
 genTable genRandStr hash reduce charset pwSize chainSize chainCount randSeed =
   let genChain = genChainImpl hash reduce' chainSize
       reduce' = reduce charset pwSize
-      genChains = map (\s -> s <$ last (genChain s))
+      genChains l = map (\s -> s <$ last (genChain s)) l `using` parListChunk 100 rdeepseq
       !(!rt, nextSeed) = genTableImpl genRandStr genChains charset pwSize randSeed chainCount
    in ( RainbowTable
           { table = rt,

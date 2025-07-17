@@ -66,8 +66,10 @@ executable rainbowtable
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
+    ghc-options: -threaded -with-rtsopts=-N
+
     -- Other library packages from which modules are imported.
-    build-depends:    unordered-containers, mtl, random, crypto-api, base16-bytestring, bytestring, text, cryptohash-sha512, base ^>=4.19.2.0
+    build-depends:    parallel, unordered-containers, mtl, random, crypto-api, base16-bytestring, bytestring, text, cryptohash-sha512, base ^>=4.19.2.0
 
     -- Directories containing source files.
     hs-source-dirs:   app
