@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 
-module RainbowTable (genTable, lookup, genRandStrImpl, RainbowTable (..)) where
+module RainbowTable (genTable, lookup, genRandStrImpl, genChainImpl, RainbowTable (..)) where
 
 import Control.Monad
 import Control.Monad.State.Lazy
@@ -9,7 +9,6 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import System.Random
 import Prelude hiding (lookup)
-import Debug.Trace (trace)
 import Data.Maybe (isJust)
 import Control.Parallel.Strategies (parListChunk, rdeepseq, using)
 
@@ -115,7 +114,7 @@ lookupInit rt hashed =
   let mFound = HashMap.lookup hashed rt.table
       l = [tryFindInit rt hashed i rt.chainLength | i <- [rt.chainLength,rt.chainLength-1 .. 1]]
    in case mFound of
-        Nothing -> trace ("tried: " ++ show l) $ sequence $ filter isJust l
+        Nothing -> sequence $ filter isJust l
         Just init -> Just [init]
 
 tryFindInit :: RainbowTable -> B.ByteString -> Int -> Int -> Maybe String

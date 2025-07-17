@@ -61,7 +61,7 @@ executable rainbowtable
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules: HashReduce, RainbowTable
+    other-modules: HashReduce, RainbowTable, Storage
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -69,7 +69,7 @@ executable rainbowtable
     ghc-options: -threaded -with-rtsopts=-N
 
     -- Other library packages from which modules are imported.
-    build-depends:    parallel, unordered-containers, mtl, random, crypto-api, base16-bytestring, bytestring, text, cryptohash-sha512, base ^>=4.19.2.0
+    build-depends:    binary, parallel, unordered-containers, mtl, random, crypto-api, base16-bytestring, bytestring, text, cryptohash-sha512, base ^>=4.19.2.0, directory, hashable
 
     -- Directories containing source files.
     hs-source-dirs:   app

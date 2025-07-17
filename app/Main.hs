@@ -5,6 +5,8 @@ import Data.HashMap.Strict qualified as HashMap
 import HashReduce (bs2s, hash, reduce, s2bs)
 import RainbowTable (RainbowTable (table))
 import RainbowTable qualified
+import Storage (load, save)
+import System.Environment (getArgs)
 import System.IO (hFlush, stdout)
 import System.Random (mkStdGen)
 
@@ -28,28 +30,28 @@ genRandStr = RainbowTable.genRandStrImpl
 
 main :: IO ()
 main = do
-  putStrLn "Gerando Rainbowtable..."
-  let !(rt, _) = RainbowTable.genTable genRandStr hash reduce charset pwLength chainLength chainCount (mkStdGen 0)
-
-  putStrLn "Rainbowtable gerada!"
-  putStrLn $ "chainCout: " ++ show chainCount ++ ". Entradas na rainbowtable: " ++ show (length . HashMap.toList $ RainbowTable.table rt)
-
-  let test = fst $ head $ HashMap.toList (table rt)
-  putStrLn $ "Hash a ser buscado: " ++ bs2s test
-  let Just senha = RainbowTable.lookup rt test
-  putStrLn $ "Senha encontrada: " ++ senha
-  putStrLn $ "Hash da senha: " ++ bs2s (hash senha)
-
-  forever $ do
-    putStr "Digite um SHA512: "
-    hFlush stdout
-    hashed <- s2bs <$> getLine
-    let mpw = RainbowTable.lookup rt hashed
-    case mpw of
-      Just pw -> do
-        putStrLn $ "Senha encontrada: " ++ pw
-        putStrLn $ "Hash da senha: " ++ bs2s (hash pw)
-      Nothing -> do
-        putStrLn "Não encontrado"
-        a <- getLine
-        print $ map snd $ RainbowTable.genChain rt a
+  args <- getArgs
+  case args of
+    ["gen", path] -> do
+      putStrLn "Gerando Rainbowtable..."
+      let !(rt, _) = RainbowTable.genTable genRandStr hash reduce charset pwLength chainLength chainCount (mkStdGen 0)
+      putStrLn "Rainbowtable gerada!"
+      putStrLn $ "chainCout: " ++ show chainCount ++ ". Entradas na rainbowtable: " ++ show (length . HashMap.toList $ RainbowTable.table rt)
+      save path rt
+      putStrLn $ "Rainbowtable salva em: " ++ path
+    ["lookup", path] -> do
+      putStrLn $ "Carregando rainbowtable de: " ++ path
+      rt <- load path hash reduce charset pwLength
+      putStrLn "Rainbowtable carregada!"
+      forever $ do
+        putStr "Digite um SHA512: "
+        hFlush stdout
+        hashed <- s2bs <$> getLine
+        let mpw = RainbowTable.lookup rt hashed
+        case mpw of
+          Just pw -> do
+            putStrLn $ "Senha encontrada: " ++ pw
+            putStrLn $ "Hash da senha: " ++ bs2s (hash pw)
+          Nothing -> do
+            putStrLn "Não encontrado"
+    _ -> putStrLn "Uso: rainbowtable <gen|lookup> <caminho>"
