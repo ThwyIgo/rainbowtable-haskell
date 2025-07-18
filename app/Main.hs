@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Control.Monad (forM, forever, replicateM)
-import Control.Monad.State ( runState, MonadState(put, get) )
+import Control.Monad.State (MonadState (get, put), runState)
 import Data.HashMap.Strict qualified as HashMap
 import HashReduce (bs2s, hash, reduce, s2bs)
 import RainbowTable (RainbowTable (table))
@@ -77,4 +77,11 @@ main = do
             return False
       let rate :: Float = fromIntegral (length (filter id results)) / fromIntegral (length results)
       putStrLn $ "Senhas encontradas: " ++ show (rate * 100) ++ "%"
-    _ -> putStrLn "Uso: rainbowtable <gen|lookup> <caminho>"
+    _ ->
+      mapM_
+        putStrLn
+        [ "Uso: rainbowtable <gen|lookup|test> <caminho>",
+          "gen: gerar uma rainbowtable e salvá-la no arquivo em <caminho>",
+          "lookup: procurar uma senha na rainbowtable salva em <caminho>",
+          "test: procurar 1000 senhas aleatórias na rainbowtable salva em <caminho>"
+        ]
