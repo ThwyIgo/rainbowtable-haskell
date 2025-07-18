@@ -4,13 +4,13 @@ module RainbowTable (genTable, lookup, genRandStrImpl, genChainImpl, RainbowTabl
 
 import Control.Monad
 import Control.Monad.State.Lazy
+import Control.Parallel.Strategies (parListChunk, rdeepseq, using)
 import Data.ByteString qualified as B
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
+import Data.Maybe (isJust)
 import System.Random
 import Prelude hiding (lookup)
-import Data.Maybe (isJust)
-import Control.Parallel.Strategies (parListChunk, rdeepseq, using)
 
 data RainbowTable = RainbowTable
   { table :: HashMap B.ByteString String,
@@ -112,7 +112,7 @@ lookup rt hashed =
 lookupInit :: RainbowTable -> B.ByteString -> Maybe [String]
 lookupInit rt hashed =
   let mFound = HashMap.lookup hashed rt.table
-      l = [tryFindInit rt hashed i rt.chainLength | i <- [rt.chainLength,rt.chainLength-1 .. 1]]
+      l = [tryFindInit rt hashed i rt.chainLength | i <- [rt.chainLength, rt.chainLength - 1 .. 1]]
    in case mFound of
         Nothing -> sequence $ filter isJust l
         Just init -> Just [init]
@@ -121,7 +121,7 @@ tryFindInit :: RainbowTable -> B.ByteString -> Int -> Int -> Maybe String
 tryFindInit rt hashed i max =
   let i1 = fromIntegral i :: Integer
       max1 = fromIntegral max :: Integer
-      steps = map rt.reduce [i1 .. max1-1]
+      steps = map rt.reduce [i1 .. max1 - 1]
       lastHash = foldl (\bs r -> rt.hash $ r bs) hashed steps
       mFound = HashMap.lookup lastHash rt.table
    in mFound

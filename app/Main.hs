@@ -2,7 +2,7 @@ module Main (main) where
 
 import Control.Monad (forever)
 import Data.HashMap.Strict qualified as HashMap
-import HashReduce (bs2s, hash, reduce, s2bs)
+import HashReduce (hash, reduce, s2bs)
 import RainbowTable (RainbowTable (table))
 import RainbowTable qualified
 import Storage (load, save)
@@ -14,10 +14,10 @@ pwLength :: Int
 pwLength = 5
 
 chainLength :: Int
-chainLength = 100
+chainLength = 1000
 
 chainCount :: Int
-chainCount = pwLength ^ length charset `div` chainLength ^ 6
+chainCount = 10 ^ 6
 
 charset :: [Char]
 charset =
@@ -51,7 +51,6 @@ main = do
         case mpw of
           Just pw -> do
             putStrLn $ "Senha encontrada: " ++ pw
-            putStrLn $ "Hash da senha: " ++ bs2s (hash pw)
           Nothing -> do
             putStrLn "Não encontrado"
     _ -> putStrLn "Uso: rainbowtable <gen|lookup> <caminho>"

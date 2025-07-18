@@ -1,25 +1,23 @@
 {-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Storage (save, load) where
 
 import Control.Monad (unless)
-import Data.Binary (Binary(..), decodeFileOrFail, encodeFile)
+import Data.Binary (Binary (..), decodeFileOrFail, encodeFile)
 import Data.ByteString qualified as B
-import Data.Hashable (Hashable)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (Hashable)
 import RainbowTable (RainbowTable (..), genChainImpl)
 import System.Directory (doesFileExist)
 import Prelude hiding (lookup)
 
 -- newtype wrapper to avoid orphan instance
-newtype SerializableHashMap k v = SerializableHashMap { unwrapHashMap :: HashMap k v }
+newtype SerializableHashMap k v = SerializableHashMap {unwrapHashMap :: HashMap k v}
 
 instance (Eq k, Hashable k, Binary k, Binary v) => Binary (SerializableHashMap k v) where
-    put = put . HashMap.toList . unwrapHashMap
-    get = SerializableHashMap . HashMap.fromList <$> get
+  put = put . HashMap.toList . unwrapHashMap
+  get = SerializableHashMap . HashMap.fromList <$> get
 
 -- | Saves the rainbow table to a file.
 save :: FilePath -> RainbowTable -> IO ()
@@ -45,8 +43,7 @@ load path hash reduce charset pwSize = do
           genChain = genChainImpl hash reduce' chainLength
        in return
             RainbowTable
-              {
-                table = table,
+              { table = table,
                 genChain = genChain,
                 chainLength = chainLength,
                 hash = hash,
