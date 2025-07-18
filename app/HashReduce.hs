@@ -23,21 +23,15 @@ hash str =
 
 reduce :: [Char] -> Int -> Integer -> B.ByteString -> String
 reduce charset pwLength roundIndex hashed =
-    let
-        hashValue :: Integer
-        hashValue = B.foldl' (\acc byte -> acc * 256 + fromIntegral byte) 0 hashed
+  let hashValue :: Integer = B.foldl' (\acc byte -> acc * 256 + fromIntegral byte) 0 hashed
+      lenCharset :: Integer = fromIntegral (length charset)
 
-        lenCharset :: Integer
-        lenCharset = fromIntegral (length charset)
-
-        generateChar :: Int -> String -> String
-        generateChar i acc
-            | i >= pwLength = reverse acc
-            | otherwise =
-                let
-                    idx :: Integer
-                    idx = (hashValue `shift` negate (fromIntegral i * 8 + fromIntegral roundIndex)) `mod` lenCharset
-                    char = charset !! fromIntegral idx
-                in
-                    generateChar (i + 1) (char : acc)
-    in generateChar 0 ""
+      generateChar :: Int -> String -> String
+      generateChar i acc
+        | i >= pwLength = reverse acc
+        | otherwise =
+            let idx :: Integer
+                idx = (hashValue `shift` negate (fromIntegral i * 8 + fromIntegral roundIndex)) `mod` lenCharset
+                char = charset !! fromIntegral idx
+             in generateChar (i + 1) (char : acc)
+   in generateChar 0 ""

@@ -2,14 +2,14 @@
 
 module RainbowTable (genTable, lookup, genRandStrImpl, genChainImpl, RainbowTable (..)) where
 
-import Control.Monad
-import Control.Monad.State.Lazy
+import Control.Monad (msum, replicateM)
+import Control.Monad.State.Lazy (MonadState (get, put), evalState, runState)
 import Control.Parallel.Strategies (parListChunk, rdeepseq, using)
 import Data.ByteString qualified as B
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Maybe (isJust)
-import System.Random
+import System.Random (Random (randomR), StdGen)
 import Prelude hiding (lookup)
 
 data RainbowTable = RainbowTable
@@ -61,10 +61,10 @@ genTableImpl ::
   StdGen ->
   ChainCount ->
   (HashMap B.ByteString String, StdGen)
-genTableImpl genRandStr genChains charset pwSize randSeed chainCount =
+genTableImpl genRandStr genChains charset pwLength randSeed chainCount =
   let randStr' = do
         seed <- get
-        let (str, nextSeed) = genRandStr charset seed pwSize
+        let (str, nextSeed) = genRandStr charset seed pwLength
         put nextSeed
         return str
       (initialPws, nextSeed) = flip runState randSeed $ replicateM chainCount randStr'
@@ -119,8 +119,8 @@ lookupInit rt hashed =
 
 tryFindInit :: RainbowTable -> B.ByteString -> Int -> Int -> Maybe String
 tryFindInit rt hashed i max =
-  let i1 = fromIntegral i :: Integer
-      max1 = fromIntegral max :: Integer
+  let i1 :: Integer = fromIntegral i
+      max1 :: Integer = fromIntegral max
       steps = map rt.reduce [i1 .. max1 - 1]
       lastHash = foldl (\bs r -> rt.hash $ r bs) hashed steps
       mFound = HashMap.lookup lastHash rt.table

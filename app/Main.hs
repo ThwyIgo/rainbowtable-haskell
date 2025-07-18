@@ -1,8 +1,9 @@
 module Main (main) where
 
-import Control.Monad (forever)
+import Control.Monad (forM, forever, replicateM)
+import Control.Monad.State ( runState, MonadState(put, get) )
 import Data.HashMap.Strict qualified as HashMap
-import HashReduce (hash, reduce, s2bs)
+import HashReduce (bs2s, hash, reduce, s2bs)
 import RainbowTable (RainbowTable (table))
 import RainbowTable qualified
 import Storage (load, save)
@@ -53,4 +54,27 @@ main = do
             putStrLn $ "Senha encontrada: " ++ pw
           Nothing -> do
             putStrLn "Não encontrado"
+    ["test", path] -> do
+      putStrLn $ "Carregando rainbowtable de: " ++ path
+      rt <- load path hash reduce charset pwLength
+      putStrLn "Rainbowtable carregada!"
+      let (randPws, _) = flip runState (mkStdGen 1) $ replicateM 1000 $ do
+            seed <- get
+            let (str, nextSeed) = genRandStr charset seed pwLength
+            put nextSeed
+            return str
+      results <- forM randPws $ \pw -> do
+        putStrLn $ "Procurando senha: " ++ pw
+        let hashed = hash pw
+            mFound = RainbowTable.lookup rt hashed
+        putStrLn $ "Hash a ser buscado: " ++ bs2s hashed
+        case mFound of
+          Just found -> do
+            putStrLn $ "Sucesso! Senha encontrada: " ++ found
+            return True
+          Nothing -> do
+            putStrLn "Falhou"
+            return False
+      let rate :: Float = fromIntegral (length (filter id results)) / fromIntegral (length results)
+      putStrLn $ "Senhas encontradas: " ++ show (rate * 100) ++ "%"
     _ -> putStrLn "Uso: rainbowtable <gen|lookup> <caminho>"
