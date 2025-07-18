@@ -14,10 +14,10 @@ pwLength :: Int
 pwLength = 5
 
 chainLength :: Int
-chainLength = 100
+chainLength = 200
 
 chainCount :: Int
-chainCount = 50 ^ 5
+chainCount = 10 ^ 6
 
 charset :: [Char]
 charset =
@@ -36,7 +36,7 @@ main = do
       putStrLn "Gerando Rainbowtable..."
       let !(rt, _) = RainbowTable.genTable genRandStr hash reduce charset pwLength chainLength chainCount (mkStdGen 0)
       putStrLn "Rainbowtable gerada!"
-      putStrLn $ "chainCout: " ++ show chainCount ++ ". Entradas na rainbowtable: " ++ show (length . HashMap.toList $ RainbowTable.table rt)
+      putStrLn $ "chainCout: " ++ show chainCount ++ ". Entradas na rainbowtable: " ++ show (HashMap.size $ RainbowTable.table rt)
       save path rt
       putStrLn $ "Rainbowtable salva em: " ++ path
     ["lookup", path] -> do
