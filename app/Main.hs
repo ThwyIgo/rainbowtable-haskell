@@ -14,10 +14,10 @@ pwLength :: Int
 pwLength = 5
 
 chainLength :: Int
-chainLength = 1000
+chainLength = 100
 
 chainCount :: Int
-chainCount = 10 ^ 5
+chainCount = 50 ^ 5
 
 charset :: [Char]
 charset =

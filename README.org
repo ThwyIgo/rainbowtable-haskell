@@ -1,0 +1,7 @@
+* Executar
+A única dependência do projeto é o [[https://nixos.org/download/][nix]]. Instale-o na sua máquina e ele cuidará
+de todo o resto. Para compilar e executar o programa, basta executar o comando
+abaixo no terminal. Instruções de uso serão impressas na tela.
+#+begin_src sh
+nix run . [args...]
+#+end_src
