@@ -36,6 +36,8 @@
         devShells.default = pkgs.mkShell {
           buildInputs = haskellTools ++ [ codiumComExtensoes ];
         };
+
+        packages.default = pkgs.haskellPackages.callCabal2nix "rainbowtable" ./. {};
       }
     );
 }

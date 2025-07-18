@@ -17,7 +17,7 @@ chainLength :: Int
 chainLength = 1000
 
 chainCount :: Int
-chainCount = 10 ^ 6
+chainCount = 10 ^ 5
 
 charset :: [Char]
 charset =
